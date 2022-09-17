@@ -1,9 +1,9 @@
-### requirements
+### Requirements
 1. Docker, Docker-compose
 2. artillery
   - npm install -g artillery@latest
 
-### run server
+### Run server
   
 ```javascript
 
@@ -12,7 +12,7 @@ run multi/run.sh
 
 ```
 
-### run test tool
+### Run test tool
   
 ```javascript
 
@@ -29,7 +29,7 @@ artillery run scenarios-multi.yaml
 - cpu - count up to 10000
 - io - settimout 2 seconds
 
-| total requests (medain time(ms),(completed/failed))  | 3000  | 9000 | 1500
+| total requests (medain time(ms),(completed/failed))  | 3000  | 9000 | 15000
 |---|---|---|---|
 |single -  | 2ms(3000/0)  |  2ms(9000/0) | 1720ms(13186/1814) |
 |single - cpu  |  ***5168ms(801/2199)*** | 4965ms(306/8694)  | |
