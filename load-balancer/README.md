@@ -21,7 +21,6 @@ artillery run scenarios-multi.yaml
 
 ```
 
-
 ### Response comparison
 - Condition cpu: 6 core, memory 16GB
 - Testing tool - artillery
