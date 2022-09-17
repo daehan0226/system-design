@@ -2,7 +2,7 @@ config:
   target: "http://localhost:8000"
   phases:
     - duration: 30
-      arrivalRate: 100
+      arrivalRate: 300
       name: Sustained load
 scenarios:
   - name: "get"

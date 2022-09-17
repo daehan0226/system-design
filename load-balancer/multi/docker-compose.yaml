@@ -13,7 +13,7 @@ services:
       - "EXPRESS4=${EXPRESS4}"
       - "EXPRESS_PORT=${EXPRESS_PORT}"
     volumes:
-      - ./proxy/log-multi:/var/log/nginx
+      - ./proxy/log:/var/log/nginx
     restart: "unless-stopped"
     depends_on:
       - express1

@@ -10,7 +10,7 @@ services:
       - "EXPRESS=${EXPRESS}"
       - "EXPRESS_PORT=${EXPRESS_PORT}"
     volumes:
-      - ./proxy/log-single:/var/log/nginx
+      - ./proxy/log:/var/log/nginx
     restart: "unless-stopped"
     depends_on:
       - express
