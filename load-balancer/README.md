@@ -7,8 +7,8 @@
   
 ```javascript
 
-run run-single.sh
-run run-multi.sh
+run single/run.sh
+run multi/run.sh
 
 ```
 
