@@ -1,0 +1,28 @@
+version: "3"
+services:
+  proxy:
+    build:
+      context: ./proxy
+    container_name: "${PROXY_SINGLE}"
+    ports:
+      - "${PROXY_PORT_SINGLE}:80"
+    environment:
+      - "EXPRESS=${EXPRESS}"
+      - "EXPRESS_PORT=${EXPRESS_PORT}"
+    volumes:
+      - ./proxy/log-single:/var/log/nginx
+    restart: "unless-stopped"
+    depends_on:
+      - express
+
+  express:
+    build:
+      context: ../api
+    container_name: "${EXPRESS}"
+    expose:
+      - "${EXPRESS_PORT}"
+    restart: "unless-stopped"
+    volumes:
+      - ../api/logs:/usr/src/app/logs
+    env_file:
+      - ./.env

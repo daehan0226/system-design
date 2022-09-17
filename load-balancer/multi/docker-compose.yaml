@@ -1,0 +1,70 @@
+version: "3"
+services:
+  proxy:
+    build:
+      context: ./proxy
+    container_name: "${PROXY_MULTI}"
+    ports:
+      - "${PROXY_PORT_MULTI}:80"
+    environment:
+      - "EXPRESS1=${EXPRESS1}"
+      - "EXPRESS2=${EXPRESS2}"
+      - "EXPRESS3=${EXPRESS3}"
+      - "EXPRESS4=${EXPRESS4}"
+      - "EXPRESS_PORT=${EXPRESS_PORT}"
+    volumes:
+      - ./proxy/log-multi:/var/log/nginx
+    restart: "unless-stopped"
+    depends_on:
+      - express1
+      - express2
+      - express3
+      - express4
+
+  express1:
+    build:
+      context: ../api
+    container_name: "${EXPRESS1}"
+    expose:
+      - "${EXPRESS_PORT}"
+    restart: "unless-stopped"
+    volumes:
+      - ../api/logs:/usr/src/app/logs
+    env_file:
+      - ./.env
+
+  express2:
+    build:
+      context: ../api
+    container_name: "${EXPRESS2}"
+    expose:
+      - "${EXPRESS_PORT}"
+    restart: "unless-stopped"
+    volumes:
+      - ../api/logs:/usr/src/app/logs
+    env_file:
+      - ./.env
+
+  express3:
+    build:
+      context: ../api
+    container_name: "${EXPRESS3}"
+    expose:
+      - "${EXPRESS_PORT}"
+    restart: "unless-stopped"
+    volumes:
+      - ../api/logs:/usr/src/app/logs
+    env_file:
+      - ./.env
+
+  express4:
+    build:
+      context: ../api
+    container_name: "${EXPRESS4}"
+    expose:
+      - "${EXPRESS_PORT}"
+    restart: "unless-stopped"
+    volumes:
+      - ../api/logs:/usr/src/app/logs
+    env_file:
+      - ./.env

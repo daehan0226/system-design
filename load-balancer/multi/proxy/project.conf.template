@@ -1,0 +1,20 @@
+upstream api {
+    least_conn;
+    server ${EXPRESS1}:${EXPRESS_PORT};
+    server ${EXPRESS2}:${EXPRESS_PORT};
+    server ${EXPRESS3}:${EXPRESS_PORT};
+    server ${EXPRESS4}:${EXPRESS_PORT};
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://api;
+
+        # Do not change this
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
