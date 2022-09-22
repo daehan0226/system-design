@@ -103,6 +103,10 @@ dist
 # Mysql Local files
 */mysql/data/*
 
+
+# Mongo Local files
+*/mongo/db/*
+
 # TernJS port file
 .tern-port
 

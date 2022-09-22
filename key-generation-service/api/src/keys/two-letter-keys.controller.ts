@@ -1,18 +1,10 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
-import { KeysService } from './keys.service';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { CreateKeyDto } from './dto/create-key.dto';
+import { TwoLetterKeysService } from './two-letter-keys.service';
 
-@Controller('keys')
-export class KeysController {
-  constructor(private readonly keysService: KeysService) {}
+@Controller('two-letter-keys')
+export class TwoLetterKeysController {
+  constructor(private readonly keysService: TwoLetterKeysService) {}
 
   @Post()
   async create(@Body() createKeyDto: CreateKeyDto) {

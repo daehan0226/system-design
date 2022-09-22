@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CreateKeyDto } from './dto/create-key.dto';
-import { KeysRepository } from './keys.repository';
+import { TwoLetterKeysRepository } from './two-letter-keys.repository';
 
 @Injectable()
-export class KeysService {
-  constructor(private readonly keysRepository: KeysRepository) {}
+export class TwoLetterKeysService {
+  constructor(private readonly keysRepository: TwoLetterKeysRepository) {}
   async create(dto: CreateKeyDto) {
     try {
       return await this.keysRepository.create(dto.key);
@@ -82,9 +82,7 @@ export class KeysService {
     const result = [];
     for (const i of letterList) {
       for (const j of letterList) {
-        for (const k of letterList) {
-          result.push(`${i}${j}${k}`);
-        }
+        result.push(`${i}${j}`);
       }
     }
     return result;

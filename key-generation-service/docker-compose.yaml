@@ -1,16 +1,16 @@
 version: "3"
 services:
-  nest:
-    build:
-      context: ./api
-    container_name: "${NEST}"
-    ports:
-      - "${NEST_EXTERNAL_PORT}:${NEST_PORT}"
-    restart: "unless-stopped"
-    env_file:
-      - ./.env
-    depends_on:
-      - mysql
+  # nest:
+  #   build:
+  #     context: ./api
+  #   container_name: "${NEST}"
+  #   ports:
+  #     - "${NEST_EXTERNAL_PORT}:${NEST_PORT}"
+  #   restart: "unless-stopped"
+  #   env_file:
+  #     - ./.env
+  #   depends_on:
+  #     - mysql
 
   mysql:
     image: mysql:8.0
@@ -29,3 +29,17 @@ services:
       - --collation-server=utf8mb4_unicode_ci
     volumes:
       - ./mysql/data:/var/lib/mysql
+
+  mongo:
+    image: mongo
+    restart: always
+    container_name: "${MONGO}"
+    ports:
+      - "${MONGO_EXTERNAL_PORT}:${MONGO_PORT}"
+    volumes:
+      - ./mongo/db:/data/db
+      - ./mongo/backup:/data/backup
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USERNAME}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD}"
+      MONGO_INITDB_DATABASE: "${MONGO_DATABASE}"
