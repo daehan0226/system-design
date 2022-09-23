@@ -24,9 +24,14 @@ export class KeysController {
     return await this.keysService.insertMany();
   }
 
+  @Get('used')
+  async getUsedKeys() {
+    return await this.keysService.getUsedKeys();
+  }
+
   @Get()
-  async findAll() {
-    return await this.keysService.findAll();
+  async getKey() {
+    return await this.keysService.getKey();
   }
 
   @Get('config')

@@ -1,16 +1,47 @@
 import { Injectable } from '@nestjs/common';
 import { CreateKeyDto } from './dto/create-key.dto';
 import { KeysRepository } from './keys.repository';
+import { UsedKeysRepository } from './used-keys.repository';
+
+let keysInMemory: string[] = [];
 
 @Injectable()
 export class KeysService {
-  constructor(private readonly keysRepository: KeysRepository) {}
+  constructor(
+    private readonly keysRepository: KeysRepository,
+    private readonly usedKeysRepository: UsedKeysRepository,
+  ) {}
   async create(dto: CreateKeyDto) {
     try {
       return await this.keysRepository.create(dto.key);
     } catch {
       return;
     }
+  }
+
+  async getUsedKeys() {
+    return await this.usedKeysRepository.getAll();
+  }
+
+  async insertKeysToMemory() {
+    const keys = await this.keysRepository.getMany(100);
+    await this.usedKeysRepository.save(
+      keys.map((k) => {
+        return {
+          _id: k._id,
+        };
+      }),
+    );
+    keysInMemory = keys.map((k) => k._id);
+  }
+
+  async getKey() {
+    const keyInMemoryCount = keysInMemory.length;
+    if (keyInMemoryCount === 0) {
+      await this.insertKeysToMemory();
+    }
+    console.log(`key in memory count: ${keyInMemoryCount}`);
+    return keysInMemory.pop();
   }
 
   generate() {

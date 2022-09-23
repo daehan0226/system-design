@@ -13,6 +13,8 @@ import { oneLetterKeySchema } from './entities/one-letter-keys.entity';
 import { OneLetterKeysController } from './one-letter-keys.controller';
 import { OneLetterKeysService } from './one-letter-keys.service';
 import { OneLetterKeysRepository } from './one-letter-keys.repository';
+import { UsedKeysRepository } from './used-keys.repository';
+import { usedKeySchema } from './entities/used-keys.entity';
 
 @Module({
   imports: [
@@ -29,6 +31,10 @@ import { OneLetterKeysRepository } from './one-letter-keys.repository';
         name: 'oneLetterKeys',
         schema: oneLetterKeySchema,
       },
+      {
+        name: 'usedKeys',
+        schema: usedKeySchema,
+      },
     ]),
   ],
   controllers: [
@@ -43,6 +49,7 @@ import { OneLetterKeysRepository } from './one-letter-keys.repository';
     TwoLetterKeysRepository,
     OneLetterKeysService,
     OneLetterKeysRepository,
+    UsedKeysRepository,
   ],
 })
 export class KeysModule {}

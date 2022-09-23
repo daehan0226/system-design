@@ -13,6 +13,10 @@ export class KeysRepository {
     return await this._keyEntity.findOne();
   }
 
+  async getMany(count: number): Promise<KeyEntity[]> {
+    return await this._keyEntity.find().limit(count);
+  }
+
   async findAll(): Promise<KeyEntity[]> {
     return await this._keyEntity.find();
   }
