@@ -1,0 +1,11 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 5
+      arrivalRate: 500
+      name: get keys
+scenarios:
+  - name: "get"
+    flow:
+      - get:
+          url: "/keys"
