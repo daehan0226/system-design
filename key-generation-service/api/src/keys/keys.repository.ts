@@ -32,4 +32,8 @@ export class KeysRepository {
   async create(key: string) {
     return await this._keyEntity.create({ _id: key });
   }
+
+  async remove(keys: string[]) {
+    return await this._keyEntity.remove({ _id: { $in: keys } });
+  }
 }

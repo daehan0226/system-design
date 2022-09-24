@@ -9,14 +9,14 @@ export class UsedKeysRepository {
   ) {}
 
   async save(keys) {
-    for (const key of keys) {
-      try {
-        await this._keyEntity.create(key);
-      } catch (e) {}
-    }
+    await this._keyEntity.insertMany(keys);
   }
 
   async getAll() {
     return await this._keyEntity.find();
+  }
+
+  async size(): Promise<any> {
+    return await this._keyEntity.collection.stats();
   }
 }

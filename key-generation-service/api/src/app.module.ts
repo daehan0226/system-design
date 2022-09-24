@@ -8,6 +8,7 @@ import { MongooseModule } from '@nestjs/mongoose';
   imports: [
     MongooseModule.forRoot('mongodb://kgs:kgs@localhost:10002', {
       dbName: 'kgs',
+      maxPoolSize: 4,
     }),
     KeysModule,
   ],

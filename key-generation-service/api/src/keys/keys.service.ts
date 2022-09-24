@@ -1,16 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { CreateKeyDto } from './dto/create-key.dto';
 import { KeysRepository } from './keys.repository';
 import { UsedKeysRepository } from './used-keys.repository';
 
 let keysInMemory: string[] = [];
+const maxKeyCountInMemory = process.env.MAX_KEY_COUNT_IN_MEMORY
+  ? Number(process.env.MAX_KEY_COUNT_IN_MEMORY)
+  : 100;
 
 @Injectable()
-export class KeysService {
+export class KeysService implements OnModuleInit {
   constructor(
     private readonly keysRepository: KeysRepository,
     private readonly usedKeysRepository: UsedKeysRepository,
   ) {}
+
+  async onModuleInit() {
+    await this.insertKeysToMemory();
+  }
+
   async create(dto: CreateKeyDto) {
     try {
       return await this.keysRepository.create(dto.key);
@@ -24,23 +32,29 @@ export class KeysService {
   }
 
   async insertKeysToMemory() {
-    const keys = await this.keysRepository.getMany(100);
-    await this.usedKeysRepository.save(
-      keys.map((k) => {
-        return {
-          _id: k._id,
-        };
-      }),
-    );
-    keysInMemory = keys.map((k) => k._id);
+    console.log('get new keys from db');
+    const time = new Date().getTime();
+    const newkeys = await this.keysRepository.getMany(maxKeyCountInMemory);
+    console.log(new Date().getTime() - time);
+    const keyList = newkeys.map((k) => k._id);
+    if (keysInMemory.length === 0) {
+      console.log(
+        `add new keys to memory and remove from keys collection and add to used collection`,
+      );
+      this.keysRepository.remove(keyList);
+      this.usedKeysRepository.save(newkeys);
+      keysInMemory = keyList;
+    } else {
+      console.log(`did not update in memory`);
+    }
   }
 
   async getKey() {
     const keyInMemoryCount = keysInMemory.length;
+    console.log(`keys in memory count: ${keyInMemoryCount}`);
     if (keyInMemoryCount === 0) {
       await this.insertKeysToMemory();
     }
-    console.log(`key in memory count: ${keyInMemoryCount}`);
     return keysInMemory.pop();
   }
 
@@ -133,9 +147,30 @@ export class KeysService {
     }
   }
 
+  async getKeyConfig() {
+    const { size, count, avgObjSize } = await this.keysRepository.size();
+
+    return {
+      size,
+      count,
+      avgObjSize,
+    };
+  }
+
+  async getUsedKeyConfig() {
+    const { size, count, avgObjSize } = await this.usedKeysRepository.size();
+
+    return {
+      size,
+      count,
+      avgObjSize,
+    };
+  }
+
   async config() {
     return {
-      keyColSize: await this.keysRepository.size(),
+      keyColSize: await this.getKeyConfig(),
+      usedKeyColSize: await this.getUsedKeyConfig(),
     };
   }
 
