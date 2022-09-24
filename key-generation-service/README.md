@@ -1,23 +1,29 @@
 ### KGS(Key Generation Service)
 - KGS can be very useful when unique value is needed and we dont have to worry about duplications or collisions.
 - Two tables for used and not used values and save some values in memory for better performance.
-- when you load the values to memory, move them to the used table.
+- When you load the values to memory, move them to the used table.
 - KGS also has to make sure not to give the same key to multiple servers. For that, it must synchronize (or get a lock on) the data structure holding the keys before removing keys from it and giving them to a server.
 
-# Implementaion
-1. create table if not exists: use, used keys(column - key)
-2. main-WAS-instance: create 4 letters values(a-z,A-Z,0-9) -> 26 + 26 + 10 = 62**3 = 238,328 cases
+### Implementaion
+1. Create table if not exists: use, used keys(column - key)
+2. Main-WAS-instance: create 3 letters values(a-z,A-Z,0-9) -> 26 + 26 + 10 = 62**3 = 238,328 cases
    1. 1 bytes hold 1 character (ASCII) 1 bytes = 8bits, 1~8bits = 2*7 - 128 => 1 letter = 1byte, 3 bytes * 238,328 = 714,984 bytes = 700KB
-3. (LOCK)get keys save some in memory(not shared, seperate in each WAS instance), move them to used keys table
+3. Get keys and save in memory(not shared, seperate in each WAS instance), move them to used keys table
 
-# API
-1. api - get: get one key from memory(return the key and update the memory), get from DB if not in memory
-2. api - delete(key): move key from used table to use table
+### API
+1. api - get one key from memory(return the key), get keys from DB if not in memory and save in memory again and remove from key collection in db and save the keys to used keys collection in db.
 
+### Consideration
+1. it could be an issue if there are multiple requests when any keys dont exist in memory.
+2. For the case like above, make sure that the keys in memory is empty before removing new keys from keys collection and save in used kyes collection.
+3. Think about where clients need to wait for db related jobs. For instance, getting keys from db must be waited but clients dont need to wait for removing keys or saving keys.
 
-3. Set .env file based on your requirements
 
 ```javascript
+
+artillery run scenarios.yaml
+
+// MongoDB Status
 /**
  * @public
  * @see https://docs.mongodb.org/manual/reference/command/collStats/
