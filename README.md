@@ -7,3 +7,4 @@
 
 
 #### [KGS - Key Generation Service(feat, MySQL memeory usage)](./key-generation-service/README.md)
+- Nginx - MongoDB(Mongoose) - calculate the size of Key length and give keys to multiple clients
