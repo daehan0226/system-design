@@ -6,5 +6,10 @@
 
 
 
-#### [KGS - Key Generation Service(feat, MySQL memeory usage)](./key-generation-service/README.md)
-- Nginx - MongoDB(Mongoose) - calculate the size of Key length and give keys to multiple clients
+#### [KGS - Key Generation Service(feat, MongoDB memeory usage)](./key-generation-service/README.md)
+- NestJs - MongoDB(Mongoose) - calculate the size of Key length and give keys to multiple clients
+
+
+
+#### [NestJs - Message queue worker(feat, bull)](./message-queues/README.md)
+- NestJs - Redis messag queue worker - One WAS instance and Two worker processes for CPU intensive tasks
