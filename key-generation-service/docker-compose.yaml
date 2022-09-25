@@ -1,16 +1,16 @@
 version: "3"
 services:
-  # nest:
-  #   build:
-  #     context: ./api
-  #   container_name: "${NEST}"
-  #   ports:
-  #     - "${NEST_EXTERNAL_PORT}:${NEST_PORT}"
-  #   restart: "unless-stopped"
-  #   env_file:
-  #     - ./.env
-  #   depends_on:
-  #     - mysql
+  nest:
+    build:
+      context: ./api
+    container_name: "${NEST}"
+    ports:
+      - "${NEST_EXTERNAL_PORT}:${NEST_PORT}"
+    restart: "unless-stopped"
+    env_file:
+      - ./.env
+    depends_on:
+      - mysql
 
   mysql:
     image: mysql:8.0
