@@ -1,0 +1,51 @@
+version: "3.3"
+
+services:
+  nest:
+    build:
+      context: ./api
+    container_name: "${NEST}"
+    ports:
+      - "${NEST_EXTERNAL_PORT}:${NEST_PORT}"
+    restart: "unless-stopped"
+    env_file:
+      - ./.env
+    environment:
+      - SERVICE_TYPE=WAS
+    depends_on:
+      - redis
+  nest-worker-1:
+    build:
+      context: ./api
+    container_name: "${NEST_WORKER_1}"
+    ports:
+      - "${NEST_WORKER_1_EXTERNAL_PORT}:${NEST_PORT}"
+    restart: "unless-stopped"
+    env_file:
+      - ./.env
+    environment:
+      - SERVICE_TYPE=WORKER
+    depends_on:
+      - redis
+      - nest
+
+  nest-worker-2:
+    build:
+      context: ./api
+    container_name: "${NEST_WORKER_2}"
+    ports:
+      - "${NEST_WORKER_2_EXTERNAL_PORT}:${NEST_PORT}"
+    restart: "unless-stopped"
+    env_file:
+      - ./.env
+    environment:
+      - SERVICE_TYPE=WORKER
+    depends_on:
+      - redis
+      - nest
+  redis:
+    image: redis:alpine
+    command: redis-server
+    container_name: "${REDIS}"
+    ports:
+      - "${REDIS_PORT}:6379"
