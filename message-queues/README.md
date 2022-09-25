@@ -1,5 +1,5 @@
 ### Design CPU intensive tasks with queues
-- WAS: Send tasks to task queus and do not process tasks in WAS instance, act as producers. It will delegate tasks to other processes.
+- WAS: Send tasks to task queues and do not process tasks in WAS instance, act as producers. It will delegate tasks to other processes.
 - WORKER: As a comsumer, it will process takss from queues.
 
 
