@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { KeysService } from './keys.service';
 import { CreateKeyDto } from './dto/create-key.dto';
 
@@ -29,9 +21,21 @@ export class KeysController {
     return await this.keysService.getUsedKeys();
   }
 
+  @Get('test')
+  async test() {
+    return;
+  }
+
   @Get()
   async getKey() {
-    return await this.keysService.getKey();
+    const time = performance.now();
+    const { key, keyCountInMemory } = await this.keysService.getKey();
+    console.log(
+      `get key time: ${
+        performance.now() - time
+      }, key in memory count: ${keyCountInMemory}, key: ${key}`,
+    );
+    return key;
   }
 
   @Get('config')

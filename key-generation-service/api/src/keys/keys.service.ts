@@ -6,7 +6,7 @@ import { UsedKeysRepository } from './used-keys.repository';
 let keysInMemory: string[] = [];
 const maxKeyCountInMemory = process.env.MAX_KEY_COUNT_IN_MEMORY
   ? Number(process.env.MAX_KEY_COUNT_IN_MEMORY)
-  : 100;
+  : 200;
 
 @Injectable()
 export class KeysService implements OnModuleInit {
@@ -32,15 +32,12 @@ export class KeysService implements OnModuleInit {
   }
 
   async insertKeysToMemory() {
-    console.log('get new keys from db');
-    const time = new Date().getTime();
     const newkeys = await this.keysRepository.getMany(maxKeyCountInMemory);
-    console.log(new Date().getTime() - time);
-    const keyList = newkeys.map((k) => k._id);
     if (keysInMemory.length === 0) {
       console.log(
         `add new keys to memory and remove from keys collection and add to used collection`,
       );
+      const keyList = newkeys.map((k) => k._id);
       this.keysRepository.remove(keyList);
       this.usedKeysRepository.save(newkeys);
       keysInMemory = keyList;
@@ -51,11 +48,13 @@ export class KeysService implements OnModuleInit {
 
   async getKey() {
     const keyInMemoryCount = keysInMemory.length;
-    console.log(`keys in memory count: ${keyInMemoryCount}`);
     if (keyInMemoryCount === 0) {
       await this.insertKeysToMemory();
     }
-    return keysInMemory.pop();
+    return {
+      key: keysInMemory.shift(),
+      keyCountInMemory: keysInMemory.length,
+    };
   }
 
   generate() {
