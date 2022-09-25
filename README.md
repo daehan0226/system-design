@@ -11,5 +11,5 @@
 
 
 
-#### [NestJs - Message queue worker(feat, bull)](./message-queues/README.md)
+#### [Message queue worker(feat, NestJS with Bull)](./message-queues/README.md)
 - NestJs - Redis messag queue worker - One WAS instance and Two worker processes for CPU intensive tasks
