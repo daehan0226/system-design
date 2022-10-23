@@ -16,13 +16,6 @@ interface MessagePayload {
   message: string;
 }
 
-interface IRoomPayload {
-  creater: string;
-  name: string;
-  maxUser?: number;
-  password?: string;
-}
-
 interface IRoom {
   creater: string;
   name: string;
@@ -66,6 +59,15 @@ export class EventsGateway
 
   handleDisconnect(@ConnectedSocket() socket: Socket) {
     this.logger.log(`${socket.id} 소켓 연결 해제 ❌`);
+    rooms.forEach((room) => {
+      if (room.users.includes(socket.id)) {
+        room.users = room.users.filter((u) => u !== socket.id);
+        socket.broadcast.to(room.name).emit('message', {
+          message: `${socket.id}님이 나가셨습니다.`,
+          room,
+        });
+      }
+    });
   }
 
   @SubscribeMessage('message')
