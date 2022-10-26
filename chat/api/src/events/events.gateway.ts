@@ -9,6 +9,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { RedisAdapter } from '@socket.io/redis-adapter';
 import { Namespace, Socket } from 'socket.io';
 
 interface MessagePayload {
@@ -30,9 +31,7 @@ let rooms: IRoom[] = [];
 
 @WebSocketGateway({
   namespace: 'chat',
-  cors: {
-    origin: ['http://localhost:3000'],
-  },
+  origin: ['http://localhost:3000'],
 })
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -53,8 +52,12 @@ export class EventsGateway
     this.logger.log('웹소켓 서버 초기화 ✅');
   }
 
-  handleConnection(@ConnectedSocket() socket: Socket) {
-    this.logger.log(`${socket.id} 소켓 연결`);
+  async handleConnection(@ConnectedSocket() socket) {
+    this.logger.log(`${socket.id} 소켓 연결됨`);
+
+    const adapter: RedisAdapter = socket.adapter;
+    const sockets = await adapter.allRooms();
+    // this.nsp.emit('users', Array.from(sockets));
   }
 
   handleDisconnect(@ConnectedSocket() socket: Socket) {

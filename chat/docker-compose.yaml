@@ -1,0 +1,65 @@
+version: "3"
+services:
+  proxy:
+    build:
+      context: ./proxy
+    container_name: "${PROXY}"
+    ports:
+      - "${PROXY_PORT}:80"
+    environment:
+      - "API1=${API1}"
+      - "API2=${API2}"
+      - "API_PORT=${API_PORT}"
+    volumes:
+      - ./proxy/log:/var/log/nginx
+    restart: "unless-stopped"
+    depends_on:
+      - api1
+      - api2
+
+  api1:
+    build:
+      context: ./api
+    container_name: "${API1}"
+    expose:
+      - "${API_PORT}"
+    restart: "unless-stopped"
+    volumes:
+      - ./api/logs:/usr/src/app/logs
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+
+  api2:
+    build:
+      context: ./api
+    container_name: "${API2}"
+    expose:
+      - "${API_PORT}"
+    restart: "unless-stopped"
+    volumes:
+      - ../api/logs:/usr/src/app/logs
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    command: redis-server
+    container_name: "${REDIS}"
+    ports:
+      - "${REDIS_PORT}:6379"
+
+  client:
+    build:
+      context: ./client
+    ports:
+      - "${FRONT_PORT}:3000"
+    container_name: "${FRONT}"
+    # volumes:
+    #   - ./client:/usr/src/app
+    #   - /usr/src/app/node_modules
+    depends_on:
+      - proxy

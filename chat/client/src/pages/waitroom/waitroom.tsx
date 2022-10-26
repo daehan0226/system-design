@@ -20,6 +20,7 @@ interface IRoom {
 
 const WaitRoom = () => {
   const [rooms, setRooms] = useState<IRoom[]>([]);
+  const [users, setUsers] = useState<string[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,12 +32,17 @@ const WaitRoom = () => {
       }
     };
 
-    socket.emit("rooms", setRoomsHandler);
+    // const setUsersHandler = (users: string[]) => {
+    //   setUsers(users);
+    // };
+
+    // socket.on("users", setUsersHandler);
     socket.on("rooms", setRoomsHandler);
     socket.on("create-room", setRoomsHandler);
     socket.on("delete-room", setRoomsHandler);
 
     return () => {
+      // socket.off("users", setUsersHandler);
       socket.off("rooms", setRoomsHandler);
       socket.off("create-room", setRoomsHandler);
       socket.off("delete-room", setRoomsHandler);
@@ -102,6 +108,13 @@ const WaitRoom = () => {
           })}
         </tbody>
       </Table>
+      <div>
+        <p>
+          {users.map((user) => {
+            return <span key={user}>{user}</span>;
+          })}
+        </p>
+      </div>
     </>
   );
 };

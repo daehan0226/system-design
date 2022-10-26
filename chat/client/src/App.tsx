@@ -3,8 +3,10 @@ import Chatroom from "./pages/chatroom/chatroom.tsx";
 import WaitRoom from "./pages/waitroom/waitroom.tsx";
 import { io } from "socket.io-client";
 
-// 웹소켓 연결 및 소켓 인스턴스 생성
-export const socket = io("http://localhost:4000/chat");
+const SERVER_PORT = process.env.REACT_APP_SERVER_PORT;
+console.log(SERVER_PORT);
+
+export const socket = io(`http://localhost:4001/chat`);
 
 const App = () => {
   return (
