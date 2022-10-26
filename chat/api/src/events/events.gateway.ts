@@ -31,7 +31,9 @@ let rooms: IRoom[] = [];
 
 @WebSocketGateway({
   namespace: 'chat',
-  origin: ['http://localhost:3000'],
+  cors: {
+    origin: ['http://localhost:3000', 'http://localhost:3001'],
+  },
 })
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -57,10 +59,10 @@ export class EventsGateway
 
     const adapter: RedisAdapter = socket.adapter;
     const sockets = await adapter.allRooms();
-    // this.nsp.emit('users', Array.from(sockets));
+    this.nsp.emit('users', Array.from(sockets));
   }
 
-  handleDisconnect(@ConnectedSocket() socket: Socket) {
+  async handleDisconnect(@ConnectedSocket() socket) {
     this.logger.log(`${socket.id} 소켓 연결 해제 ❌`);
     rooms.forEach((room) => {
       if (room.users.includes(socket.id)) {
@@ -71,6 +73,10 @@ export class EventsGateway
         });
       }
     });
+
+    const adapter: RedisAdapter = socket.adapter;
+    const sockets = await adapter.allRooms();
+    this.nsp.emit('users', Array.from(sockets));
   }
 
   @SubscribeMessage('message')

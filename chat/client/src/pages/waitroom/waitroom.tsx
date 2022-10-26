@@ -32,18 +32,18 @@ const WaitRoom = () => {
       }
     };
 
-    // const setUsersHandler = (users: string[]) => {
-    //   setUsers(users);
-    // };
-
-    // socket.on("users", setUsersHandler);
+    const setUsersHandler = (users: string[]) => {
+      console.log(users);
+      setUsers(users);
+    };
+    socket.on("users", setUsersHandler);
     socket.on("rooms", setRoomsHandler);
     socket.on("create-room", setRoomsHandler);
     socket.on("delete-room", setRoomsHandler);
 
     return () => {
-      // socket.off("users", setUsersHandler);
       socket.off("rooms", setRoomsHandler);
+      socket.off("users", setUsersHandler);
       socket.off("create-room", setRoomsHandler);
       socket.off("delete-room", setRoomsHandler);
     };

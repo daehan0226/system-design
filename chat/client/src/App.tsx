@@ -6,7 +6,7 @@ import { io } from "socket.io-client";
 const SERVER_PORT = process.env.REACT_APP_SERVER_PORT;
 console.log(SERVER_PORT);
 
-export const socket = io(`http://localhost:4001/chat`);
+export const socket = io(`http://localhost:${Number(SERVER_PORT)}/chat`);
 
 const App = () => {
   return (

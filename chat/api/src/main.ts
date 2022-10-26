@@ -11,6 +11,6 @@ async function bootstrap() {
 
   app.useWebSocketAdapter(redisIoAdapter);
   console.log(port);
-  await app.listen(4001);
+  await app.listen(port);
 }
 bootstrap();
