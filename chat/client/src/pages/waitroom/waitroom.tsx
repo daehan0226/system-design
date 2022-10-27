@@ -54,6 +54,7 @@ const WaitRoom = () => {
       setUsers(users);
     };
     socket.emit("users", setUsersHandler);
+    socket.emit("rooms", setRoomsHandler);
     socket.on("users", setUsersHandler);
     socket.on("rooms", setRoomsHandler);
     socket.on("create-room", setRoomsHandler);
@@ -67,25 +68,23 @@ const WaitRoom = () => {
     };
   }, []);
 
-  const onCreateRoom = useCallback(() => {
+  const onCreateRoom = () => {
     const roomName = prompt("방 이름을 입력해 주세요.");
     if (!roomName) return alert("방 이름은 반드시 입력해야 합니다.");
-
+    console.log("zzz, ", name);
     socket.emit("create-room", roomName, (response: CreateRoomResponse) => {
       if (!response.success) return alert(response.payload);
       const { name: roomName } = response.payload;
+      console.log("props : ", name);
       navigate(`/room/${roomName}`, { state: { name } });
     });
-  }, [navigate]);
+  };
 
-  const onJoinRoom = useCallback(
-    (roomName: string) => () => {
-      socket.emit("join-room", roomName, () => {
-        navigate(`/room/${roomName}`, { state: { name } });
-      });
-    },
-    [navigate]
-  );
+  const onJoinRoom = (roomName: string) => () => {
+    socket.emit("join-room", roomName, () => {
+      navigate(`/room/${roomName}`, { state: { name } });
+    });
+  };
 
   return (
     <>

@@ -59,19 +59,27 @@ export class RedisManger {
     await this._redisService.hdel(REDIS_SESSION, socketId);
   }
 
-  async createRoom(name: string, user: User, socketId: string): Promise<Room> {
+  async createRoom(name: string, user: User): Promise<Room> {
     const roomInRedis = await this._redisService.get(REDIS_ROOM_NAME(name));
     if (roomInRedis && roomInRedis.name === name) {
       return null;
     }
     const room = new Room(name, user);
     await this._redisService.set(REDIS_ROOM_NAME(name), room);
-    await this._redisService.set(REDIS_SOCKET_ROOM(socketId), room);
+    await this._redisService.set(REDIS_SOCKET_ROOM(user.socketId), room);
     return room;
   }
 
   async getRoom(name: string): Promise<Room> {
     return this._redisService.get(REDIS_ROOM_NAME(name));
+  }
+
+  async updateRoom(room: Room) {
+    await this._redisService.set(REDIS_ROOM_NAME(room.name), room);
+    await this._redisService.set(
+      REDIS_SOCKET_ROOM(room.creater.socketId),
+      room,
+    );
   }
 
   async getRoomBySocketId(name: string, socketId: string): Promise<Room> {

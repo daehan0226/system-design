@@ -26,7 +26,7 @@ interface IChat {
 
 const ChatRoom = () => {
   const [name, setName] = useState<string>("");
-  const [chats, setChats] = useState<IChat[]>([]);
+  const [chats, setChats] = useState<[]>([]);
   const [roomInfo, setRoomInfo] = useState<any>({});
   const [message, setMessage] = useState<string>("");
   const chatContainerEl = useRef<HTMLDivElement>(null);
@@ -35,14 +35,14 @@ const ChatRoom = () => {
   const { roomName } = useParams<"roomName">();
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   const { state } = location;
-  //   console.log(state);
-  //   if (!state || !state.name) {
-  //     navigate("/");
-  //   }
-  //   setName(state.name);
-  // }, []);
+  useEffect(() => {
+    const { state } = location;
+    console.log(state);
+    if (!state || !state.name) {
+      navigate("/");
+    }
+    setName(state.name);
+  }, []);
 
   // 채팅이 길어지면(chats.length) 스크롤이 생성되므로, 스크롤의 위치를 최근 메시지에 위치시키기 위함
   useEffect(() => {
@@ -58,9 +58,10 @@ const ChatRoom = () => {
 
   // message event listener
   useEffect(() => {
-    const messageHandler = (chat: IChat) => {
+    const messageHandler = (chat) => {
+      console.log(chat);
       if (chat.room) {
-        setRoomInfo(chat.room);
+        setRoomInfo({ ...chat.room });
       }
       setChats((prevChats) => [...prevChats, chat]);
     };
@@ -99,7 +100,7 @@ const ChatRoom = () => {
       e.preventDefault();
       if (!message) return alert("메시지를 입력해 주세요.");
 
-      socket.emit("message", { roomName, message }, (chat: IChat) => {
+      socket.emit("message", { roomName, message }, (chat) => {
         setChats((prevChats) => [...prevChats, chat]);
         setMessage("");
       });
@@ -113,6 +114,10 @@ const ChatRoom = () => {
     });
   }, [navigate, roomName]);
 
+  useEffect(() => {
+    console.log(chats);
+  }, [chats]);
+
   return (
     <>
       <h1>Room creater: {roomInfo?.creater?.name}</h1>
@@ -124,15 +129,15 @@ const ChatRoom = () => {
           <MessageBox
             key={index}
             className={classNames({
-              my_message: socket.id === chat.username,
-              alarm: !chat.username,
+              my_message: name === chat.user?.name,
+              alarm: !chat.user,
             })}
           >
             <span>
-              {chat.username
-                ? socket.id === chat.username
+              {chat.user?.name
+                ? name === chat.user.name
                   ? ""
-                  : chat.username
+                  : chat.user.name
                 : ""}
             </span>
             <Message className="message">{chat.message}</Message>

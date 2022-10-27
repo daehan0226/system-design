@@ -67,6 +67,8 @@ export class EventsGateway
     await this._redisManager.removeUser(socket.id);
     const users = await this.getUsers(socket);
     socket.broadcast.emit('users', users);
+
+    // 특정 소켓을 키로 참가중인 방을 가져와야함. socket-room
     // rooms.forEach((room) => {
     //   if (room.users.includes(socket.id)) {
     //     room.users = room.users.filter((u) => u !== socket.id);
@@ -83,17 +85,16 @@ export class EventsGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() { roomName, message }: MessagePayload,
   ) {
+    const user = await this._redisManager.getUser(socket.id);
     this.logger.debug(`send message to room name ${roomName}: ${message}`);
     socket.broadcast.to(roomName).emit('message', {
-      username: socket.id,
+      user,
       message,
-      room: rooms.find((r) => r.name === roomName),
     });
 
     return {
-      username: socket.id,
+      user,
       message,
-      room: rooms.find((r) => r.name === roomName),
     };
   }
 
@@ -115,16 +116,15 @@ export class EventsGateway
   }
 
   @SubscribeMessage('rooms')
-  handleRooms() {
-    this.logger.debug(`send room info`);
-    console.log('rooms', rooms);
+  async handleRooms(@ConnectedSocket() socket: Socket) {
+    const socketIds = await this.getSockets(socket);
+    const rooms = await this._redisManager.getAllRooms(socketIds);
     return rooms;
   }
 
   @SubscribeMessage('room')
   async handleRoom(@MessageBody() { roomName }) {
     const room = await this._redisManager.getRoom(roomName);
-    console.debug(`get room by room name ${roomName}`);
     return room;
   }
 
@@ -134,7 +134,7 @@ export class EventsGateway
     @MessageBody() name: string,
   ) {
     const user = await this._redisManager.getUser(socket.id);
-    const room = await this._redisManager.createRoom(name, user, socket.id);
+    const room = await this._redisManager.createRoom(name, user);
     if (!room) {
       return { success: false, payload: `${name} 방이 이미 존재합니다.` };
     }
@@ -178,44 +178,58 @@ export class EventsGateway
     return Array.from(sockets);
   }
 
-  // @SubscribeMessage('join-room')
-  // async handleJoinRoom(
-  //   @ConnectedSocket() socket: Socket,
-  //   @MessageBody() roomName: string,
-  // ) {
-  //   rooms.forEach((room) => {
-  //     if (room.name === roomName) {
-  //       room.users = [...room.users, socket.id];
-  //     }
-  //   });
-  //   socket.join(roomName); // 요청 소켓에 채팅방 추가
-  //   this.nsp.emit('create-room', rooms); // 대기실에 대기중인 유저에게 보내주기
-  //   this.logger.debug(`${socket.id} joined room: ${roomName}`);
-  //   socket.broadcast.to(roomName).emit('message', {
-  //     // 해당 채팅방에 전체 채팅
-  //     message: `${socket.id}가 들어왔습니다.`,
-  //     room: rooms.find((r) => r.name === roomName),
-  //   });
-  //   return { success: true };
-  // }
+  @SubscribeMessage('join-room')
+  async handleJoinRoom(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() roomName: string,
+  ) {
+    const room = await this._redisManager.getRoom(roomName);
+    if (!room) {
+      // 참가실패(나중에 기획에 따른)
+      return false;
+    }
+    const user = await this._redisManager.getUser(socket.id);
+    const updatedRoom = {
+      ...room,
+      users: [...room.users, user],
+    };
+    await this._redisManager.updateRoom(updatedRoom);
+
+    this.logger.debug(`${socket.id} joined room: ${roomName}`);
+    socket.join(roomName); // 요청 소켓에 채팅방 추가
+
+    const socketIds = await this.getSockets(socket);
+    const rooms = await this._redisManager.getAllRooms(socketIds);
+    socket.broadcast.emit('rooms', rooms);
+    socket.broadcast.to(roomName).emit('message', {
+      // 해당 채팅방에 전체 채팅
+      message: `${user.name}가 들어왔습니다.`,
+      room: updatedRoom,
+    });
+    return { success: true };
+  }
 
   @SubscribeMessage('leave-room')
-  handleLeaveRoom(
+  async handleLeaveRoom(
     @ConnectedSocket() socket: Socket,
     @MessageBody() roomName: string,
   ) {
     socket.leave(roomName);
-    rooms.forEach((room) => {
-      if (room.name === roomName) {
-        room.users = room.users.filter((u) => u !== socket.id);
-      }
-    });
+    const user = await this._redisManager.getUser(socket.id);
+    const room = await this._redisManager.getRoom(roomName);
+    const updatedRoom = {
+      ...room,
+      users: room.users.filter((u) => u.socketId !== socket.id),
+    };
+    await this._redisManager.updateRoom(updatedRoom);
+    socket.broadcast.emit('rooms', rooms);
+
     socket.broadcast.to(roomName).emit('message', {
-      message: `${socket.id}가 나갔습니다.`,
-      room: rooms.find((r) => r.name === roomName),
+      message: `${user.name}가 나갔습니다.`,
+      room: updatedRoom,
     });
 
-    this.logger.debug(`${socket.id} left from room: ${roomName}`);
+    this.logger.debug(`${user.name} left from room: ${roomName}`);
     return { success: true };
   }
 }
