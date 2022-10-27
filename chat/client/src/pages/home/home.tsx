@@ -45,7 +45,6 @@ const Home = () => {
       {users.length === 0 ? <p> No current users</p> : <p>Current user list</p>}
       {users.length > 0 &&
         users.map((u) => {
-          console.log(user);
           return <p key={u.name}>{u.name}</p>;
         })}
     </div>

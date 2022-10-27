@@ -122,33 +122,30 @@ export class EventsGateway
   }
 
   @SubscribeMessage('room')
-  handleRoom(@MessageBody() { roomName }) {
-    return rooms.find((r) => r.name === roomName);
+  async handleRoom(@MessageBody() { roomName }) {
+    const room = await this._redisManager.getRoom(roomName);
+    console.debug(`get room by room name ${roomName}`);
+    return room;
   }
 
   @SubscribeMessage('create-room')
-  handleCreateRoom(
+  async handleCreateRoom(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() roomName: string,
+    @MessageBody() name: string,
   ) {
-    const exists = rooms.find(({ name }) => name === roomName);
-    if (exists) {
-      return { success: false, payload: `${roomName} 방이 이미 존재합니다.` };
+    const user = await this._redisManager.getUser(socket.id);
+    const room = await this._redisManager.createRoom(name, user, socket.id);
+    if (!room) {
+      return { success: false, payload: `${name} 방이 이미 존재합니다.` };
     }
-    const data: IRoom = {
-      name: roomName,
-      number: rooms.length,
-      createdAt: new Date(),
-      users: [socket.id],
-      creater: socket.id,
-    };
 
-    this.logger.debug(`${socket.id} created room: ${roomName}`);
-    socket.join(roomName); // 요청 소켓 해당 채팅방에 추가
-    rooms.push(data);
-    console.log(rooms);
-    this.nsp.emit('create-room', rooms); // 대기중인 유저들에게 전달
-    return { success: true, payload: roomName };
+    this.logger.debug(`${socket.id} created room: ${room.name}`);
+    socket.join(name); // 요청 소켓 해당 채팅방에 추가
+
+    const socketIds = await this.getSockets(socket);
+    const rooms = await this._redisManager.getAllRooms(socketIds);
+    socket.broadcast.emit('create-room', rooms);
+    return { success: true, payload: room };
   }
 
   @SubscribeMessage('create-user')
@@ -171,31 +168,36 @@ export class EventsGateway
   }
 
   async getUsers(socket) {
-    const adapter: RedisAdapter = socket.adapter;
-    const sockets = await adapter.allRooms();
-    return await this._redisManager.getAllUserNames(Array.from(sockets));
+    const socketIds = await this.getSockets(socket);
+    return await this._redisManager.getAllUserNames(socketIds);
   }
 
-  @SubscribeMessage('join-room')
-  async handleJoinRoom(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() roomName: string,
-  ) {
-    rooms.forEach((room) => {
-      if (room.name === roomName) {
-        room.users = [...room.users, socket.id];
-      }
-    });
-    socket.join(roomName); // 요청 소켓에 채팅방 추가
-    this.nsp.emit('create-room', rooms); // 대기실에 대기중인 유저에게 보내주기
-    this.logger.debug(`${socket.id} joined room: ${roomName}`);
-    socket.broadcast.to(roomName).emit('message', {
-      // 해당 채팅방에 전체 채팅
-      message: `${socket.id}가 들어왔습니다.`,
-      room: rooms.find((r) => r.name === roomName),
-    });
-    return { success: true };
+  async getSockets(socket): Promise<string[]> {
+    const adapter: RedisAdapter = socket.adapter;
+    const sockets = await adapter.allRooms();
+    return Array.from(sockets);
   }
+
+  // @SubscribeMessage('join-room')
+  // async handleJoinRoom(
+  //   @ConnectedSocket() socket: Socket,
+  //   @MessageBody() roomName: string,
+  // ) {
+  //   rooms.forEach((room) => {
+  //     if (room.name === roomName) {
+  //       room.users = [...room.users, socket.id];
+  //     }
+  //   });
+  //   socket.join(roomName); // 요청 소켓에 채팅방 추가
+  //   this.nsp.emit('create-room', rooms); // 대기실에 대기중인 유저에게 보내주기
+  //   this.logger.debug(`${socket.id} joined room: ${roomName}`);
+  //   socket.broadcast.to(roomName).emit('message', {
+  //     // 해당 채팅방에 전체 채팅
+  //     message: `${socket.id}가 들어왔습니다.`,
+  //     room: rooms.find((r) => r.name === roomName),
+  //   });
+  //   return { success: true };
+  // }
 
   @SubscribeMessage('leave-room')
   handleLeaveRoom(

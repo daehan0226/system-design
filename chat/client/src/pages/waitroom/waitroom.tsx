@@ -6,21 +6,26 @@ import { socket } from "../../App.tsx";
 
 interface CreateRoomResponse {
   success: boolean;
-  payload: string;
+  payload: {
+    name: string;
+  };
 }
 
 interface IRoom {
-  creater: string;
+  creater: {
+    name: string;
+  };
   name: string;
   number: number;
-  users: string[];
+  users: any[];
   maxUser?: number;
   password?: string;
-  createdAt: Date;
+  createdAt: number;
 }
 
 const WaitRoom = () => {
   const [rooms, setRooms] = useState<IRoom[]>([]);
+  const [name, setName] = useState<string>("");
   const [users, setUsers] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +35,8 @@ const WaitRoom = () => {
     if (!state || !state.name) {
       navigate("/");
     }
+    console.log("?????", state);
+    setName(state.name);
   }, []);
 
   useEffect(() => {
@@ -66,15 +73,15 @@ const WaitRoom = () => {
 
     socket.emit("create-room", roomName, (response: CreateRoomResponse) => {
       if (!response.success) return alert(response.payload);
-
-      navigate(`/room/${response.payload}`);
+      const { name: roomName } = response.payload;
+      navigate(`/room/${roomName}`, { state: { name } });
     });
   }, [navigate]);
 
   const onJoinRoom = useCallback(
     (roomName: string) => () => {
       socket.emit("join-room", roomName, () => {
-        navigate(`/room/${roomName}`);
+        navigate(`/room/${roomName}`, { state: { name } });
       });
     },
     [navigate]
@@ -82,6 +89,7 @@ const WaitRoom = () => {
 
   return (
     <>
+      <h1>Name: {name}</h1>
       <Head>
         <div>채팅방 목록</div>
         <button onClick={onCreateRoom}>채팅방 생성</button>
@@ -101,14 +109,11 @@ const WaitRoom = () => {
         <tbody>
           {rooms.map((room, index) => {
             console.log(room);
-            console.log(room.name);
-            console.log(room.creater);
-            console.log(room.users);
             return (
               <tr key={room.name}>
                 <td>{index + 1}</td>
                 <td>{room.name}</td>
-                <td>{room.creater}</td>
+                <td>{room.creater.name}</td>
                 <td>{room.users?.length ?? 0}</td>
                 <td>{room.createdAt}</td>
                 <td>

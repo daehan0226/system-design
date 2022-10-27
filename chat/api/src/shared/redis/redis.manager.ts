@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { RedisAdapter } from '@socket.io/redis-adapter';
-import { REDIS_SESSION, REDIS_USER_NAME } from './constant';
+import {
+  REDIS_ROOM_NAME,
+  REDIS_SESSION,
+  REDIS_SOCKET_ROOM,
+  REDIS_USER_NAME,
+} from './constant';
+import { Room } from './dto/room.dto';
 import { User } from './dto/user.dto';
 import { RedisService } from './redis.service';
 
@@ -40,13 +46,46 @@ export class RedisManger {
     return data;
   }
 
+  async getUser(socketId: string): Promise<User> {
+    return await this._redisService.hget(REDIS_SESSION, socketId);
+  }
+
   async addUser(socketId: string, name: string) {
     const user = new User(socketId, name);
     await this._redisService.hset(REDIS_SESSION, socketId, user);
   }
 
   async removeUser(socketId: string) {
-    console.log(`remove session id: ${socketId}`);
     await this._redisService.hdel(REDIS_SESSION, socketId);
+  }
+
+  async createRoom(name: string, user: User, socketId: string): Promise<Room> {
+    const roomInRedis = await this._redisService.get(REDIS_ROOM_NAME(name));
+    if (roomInRedis && roomInRedis.name === name) {
+      return null;
+    }
+    const room = new Room(name, user);
+    await this._redisService.set(REDIS_ROOM_NAME(name), room);
+    await this._redisService.set(REDIS_SOCKET_ROOM(socketId), room);
+    return room;
+  }
+
+  async getRoom(name: string): Promise<Room> {
+    return this._redisService.get(REDIS_ROOM_NAME(name));
+  }
+
+  async getRoomBySocketId(name: string, socketId: string): Promise<Room> {
+    return this._redisService.hget(REDIS_ROOM_NAME(name), socketId);
+  }
+
+  async getAllRooms(socketIds: string[]) {
+    let result = [];
+    for (const socketId of socketIds) {
+      const room = await this._redisService.get(REDIS_SOCKET_ROOM(socketId));
+      if (room) {
+        result.push(room);
+      }
+    }
+    return result;
   }
 }
