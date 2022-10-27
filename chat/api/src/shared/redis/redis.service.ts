@@ -16,7 +16,20 @@ export class RedisService {
     return await this.redisClient.get(key);
   }
 
+  async hset(key: string, field: string, value: any) {
+    return await this.redisClient.hset(key, field, JSON.stringify(value));
+  }
+
+  async hget(key: string, field: string) {
+    const res = await this.redisClient.hget(key, field);
+    return JSON.parse(res);
+  }
+
   async del(key: string) {
     return await this.redisClient.del(key);
+  }
+
+  async hdel(key: string, field: string) {
+    return await this.redisClient.hdel(key, field);
   }
 }

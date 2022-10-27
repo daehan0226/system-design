@@ -34,6 +34,7 @@ const WaitRoom = () => {
 
   useEffect(() => {
     const setRoomsHandler = (rooms: IRoom[]) => {
+      console.log(rooms);
       if (rooms && rooms.length > 0) {
         setRooms([...rooms]);
       } else {
