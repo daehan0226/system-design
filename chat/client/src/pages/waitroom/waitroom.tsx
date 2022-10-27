@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router";
 import { Head, Table } from "./waitroom.styles.tsx";
 import { socket } from "../../App.tsx";
 
@@ -22,6 +23,14 @@ const WaitRoom = () => {
   const [rooms, setRooms] = useState<IRoom[]>([]);
   const [users, setUsers] = useState<string[]>([]);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const { state } = location;
+    if (!state || !state.name) {
+      navigate("/");
+    }
+  }, []);
 
   useEffect(() => {
     const setRoomsHandler = (rooms: IRoom[]) => {

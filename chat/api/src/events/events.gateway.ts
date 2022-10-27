@@ -9,8 +9,11 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { RedisAdapter } from '@socket.io/redis-adapter';
 import { Namespace, Socket } from 'socket.io';
+import { RedisService } from 'src/shared/redis/redis.service';
+import { REDIS_USER_NAME } from 'src/shared/redis/constant';
 
 interface MessagePayload {
   roomName: string;
@@ -39,8 +42,9 @@ export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   private logger = new Logger('Gateway');
-
   @WebSocketServer() nsp: Namespace;
+
+  constructor(private readonly _redisService: RedisService) {}
 
   afterInit() {
     this.nsp.adapter.on('delete-room', (name) => {
@@ -59,6 +63,7 @@ export class EventsGateway
 
     const adapter: RedisAdapter = socket.adapter;
     const sockets = await adapter.allRooms();
+    console.log(sockets);
     this.nsp.emit('users', Array.from(sockets));
   }
 
@@ -133,6 +138,21 @@ export class EventsGateway
     console.log(rooms);
     this.nsp.emit('create-room', rooms); // 대기중인 유저들에게 전달
     return { success: true, payload: roomName };
+  }
+
+  @SubscribeMessage('create-user')
+  async handleCreateUser(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() name: string,
+  ) {
+    console.log(name);
+    const userName = await this._redisService.get(REDIS_USER_NAME(name));
+    console.log(userName);
+    if (userName) {
+      return { success: false, payload: `${name} 이 이미 존재합니다.` };
+    }
+    this._redisService.set(REDIS_USER_NAME(name), 1);
+    return { success: true, payload: name };
   }
 
   @SubscribeMessage('join-room')
