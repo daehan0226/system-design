@@ -9,11 +9,8 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { RedisAdapter } from '@socket.io/redis-adapter';
 import { Namespace, Socket } from 'socket.io';
-import { RedisService } from 'src/shared/redis/redis.service';
-import { REDIS_SESSION, REDIS_USER_NAME } from 'src/shared/redis/constant';
 import { RedisManger } from 'src/shared/redis/redis.manager';
 
 interface MessagePayload {
@@ -45,10 +42,7 @@ export class EventsGateway
   private logger = new Logger('Gateway');
   @WebSocketServer() nsp: Namespace;
 
-  constructor(
-    private readonly _redisService: RedisService,
-    private readonly _redisManager: RedisManger,
-  ) {}
+  constructor(private readonly _redisManager: RedisManger) {}
 
   afterInit() {
     this.nsp.adapter.on('delete-room', (name) => {
@@ -64,13 +58,15 @@ export class EventsGateway
 
   async handleConnection(@ConnectedSocket() socket) {
     this.logger.log(`${socket.id} 소켓 연결됨`);
-    await this.broadcaseCurrentUsers(socket);
+    const users = await this.getUsers(socket);
+    socket.broadcast.emit('users', users);
   }
 
   async handleDisconnect(@ConnectedSocket() socket) {
     this.logger.log(`${socket.id} 소켓 연결 해제 ❌`);
     await this._redisManager.removeUser(socket.id);
-    await this.broadcaseCurrentUsers(socket);
+    const users = await this.getUsers(socket);
+    socket.broadcast.emit('users', users);
     // rooms.forEach((room) => {
     //   if (room.users.includes(socket.id)) {
     //     room.users = room.users.filter((u) => u !== socket.id);
@@ -105,7 +101,17 @@ export class EventsGateway
   async handleInit(@ConnectedSocket() socket: Socket) {
     this.logger.debug(`init ${socket.id}`);
     await this._redisManager.removeUser(socket.id);
-    await this.broadcaseCurrentUsers(socket);
+    const users = await this.getUsers(socket);
+    socket.broadcast.emit('users', users);
+    return users;
+  }
+
+  @SubscribeMessage('users')
+  async handleUsers(@ConnectedSocket() socket) {
+    this.logger.debug(`send users`);
+    const users = await this.getUsers(socket);
+    socket.broadcast.emit('users', users);
+    return users;
   }
 
   @SubscribeMessage('rooms')
@@ -150,20 +156,24 @@ export class EventsGateway
     @ConnectedSocket() socket,
     @MessageBody() name: string,
   ) {
-    const result = await this._redisManager.createUserName(name);
+    const result = await this._redisManager.createUserName(
+      name,
+      socket.id,
+      socket,
+    );
     if (!result) {
       return { success: false, payload: `${name} 이 이미 존재합니다.` };
     }
     await this._redisManager.addUser(socket.id, name);
-    await this.broadcaseCurrentUsers(socket);
+    const users = await this.getUsers(socket);
+    socket.broadcast.emit('users', users);
     return { success: true };
   }
 
-  async broadcaseCurrentUsers(socket) {
+  async getUsers(socket) {
     const adapter: RedisAdapter = socket.adapter;
     const sockets = await adapter.allRooms();
-    const users = await this._redisManager.getAllUserNames(Array.from(sockets));
-    socket.broadcast.emit('users', users);
+    return await this._redisManager.getAllUserNames(Array.from(sockets));
   }
 
   @SubscribeMessage('join-room')

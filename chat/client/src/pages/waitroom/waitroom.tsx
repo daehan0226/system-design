@@ -46,6 +46,7 @@ const WaitRoom = () => {
       console.log(users);
       setUsers(users);
     };
+    socket.emit("users", setUsersHandler);
     socket.on("users", setUsersHandler);
     socket.on("rooms", setRoomsHandler);
     socket.on("create-room", setRoomsHandler);
@@ -119,11 +120,11 @@ const WaitRoom = () => {
         </tbody>
       </Table>
       <div>
-        <p>
+        <div>
           {users.map((user) => {
-            return <span key={user}>{user}</span>;
+            return <p key={user.name}>{user.name}</p>;
           })}
-        </p>
+        </div>
       </div>
     </>
   );

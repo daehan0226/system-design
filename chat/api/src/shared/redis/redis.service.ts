@@ -9,11 +9,12 @@ export class RedisService {
   ) {}
 
   async set(key: string, value: any) {
-    return await this.redisClient.set(key, value);
+    return await this.redisClient.set(key, JSON.stringify(value));
   }
 
   async get(key: string) {
-    return await this.redisClient.get(key);
+    const res = await this.redisClient.get(key);
+    return JSON.parse(res);
   }
 
   async hset(key: string, field: string, value: any) {

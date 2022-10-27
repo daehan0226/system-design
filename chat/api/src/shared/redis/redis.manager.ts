@@ -1,17 +1,28 @@
 import { Injectable } from '@nestjs/common';
+import { RedisAdapter } from '@socket.io/redis-adapter';
 import { REDIS_SESSION, REDIS_USER_NAME } from './constant';
+import { User } from './dto/user.dto';
 import { RedisService } from './redis.service';
 
 @Injectable()
 export class RedisManger {
   constructor(private readonly _redisService: RedisService) {}
 
-  async createUserName(name: string) {
-    const exist = await this._redisService.get(REDIS_USER_NAME(name));
-    if (exist === '1') {
-      return false;
+  async createUserName(name: string, socketId: string, socket) {
+    const userInRedis = await this._redisService.get(REDIS_USER_NAME(name));
+    if (userInRedis && userInRedis.socketId) {
+      console.log(`name ${name} already saved in redis`);
+      const adapter: RedisAdapter = socket.adapter;
+      const sockets = await adapter.allRooms();
+      if (sockets.has(userInRedis.socketId)) {
+        console.log(
+          `socket id: ${userInRedis.socketId} is using name: ${name}`,
+        );
+        return false;
+      }
     }
-    await this._redisService.set(REDIS_USER_NAME(name), 1);
+    const user = new User(socketId, name);
+    await this._redisService.set(REDIS_USER_NAME(name), user);
     return true;
   }
 
@@ -19,8 +30,10 @@ export class RedisManger {
     let data = [];
     for (const socketId of socketIds) {
       const socketData = await this._redisService.hget(REDIS_SESSION, socketId);
-      console.log(`get session data: ${socketId}, data: ${socketData}`);
       if (socketData) {
+        console.log(
+          `get session data: ${socketId}, data: ${JSON.stringify(socketData)}`,
+        );
         data.push(socketData);
       }
     }
@@ -28,9 +41,8 @@ export class RedisManger {
   }
 
   async addUser(socketId: string, name: string) {
-    await this._redisService.hset(REDIS_SESSION, socketId, {
-      name,
-    });
+    const user = new User(socketId, name);
+    await this._redisService.hset(REDIS_SESSION, socketId, user);
   }
 
   async removeUser(socketId: string) {
