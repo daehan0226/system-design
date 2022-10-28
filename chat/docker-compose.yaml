@@ -56,6 +56,7 @@ services:
     build:
       context: ./client
       args:
+        - "REACT_APP_SERVER_HOST=${HOST}"
         - "REACT_APP_SERVER_PORT=${PROXY_PORT}"
     ports:
       - "${FRONT_PORT}:3000"
