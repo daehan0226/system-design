@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Head, Table } from "./home.styles.tsx";
+import { Head } from "./home.styles.tsx";
 import { socket } from "../../App.tsx";
 
 interface IUSER {
   name: string;
+  isChatting: boolean;
 }
 
 const Home = () => {
@@ -45,7 +46,11 @@ const Home = () => {
       {users.length === 0 ? <p> No current users</p> : <p>Current user list</p>}
       {users.length > 0 &&
         users.map((u) => {
-          return <p key={u.name}>{u.name}</p>;
+          return (
+            <p key={u.name}>
+              {u.name} is {u.isChatting ? "" : "not"} chatting
+            </p>
+          );
         })}
     </div>
   );

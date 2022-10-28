@@ -138,6 +138,9 @@ export class EventsGateway
     if (!room) {
       return { success: false, payload: `${name} 방이 이미 존재합니다.` };
     }
+    await this._redisManager.updateUser(socket.id, true);
+    const users = await this.getUsers(socket);
+    socket.broadcast.emit('users', users);
 
     this.logger.debug(`${socket.id} created room: ${room.name}`);
     socket.join(name); // 요청 소켓 해당 채팅방에 추가
@@ -161,7 +164,7 @@ export class EventsGateway
     if (!result) {
       return { success: false, payload: `${name} 이 이미 존재합니다.` };
     }
-    await this._redisManager.addUser(socket.id, name);
+    await this._redisManager.addUser(socket.id, name, false);
     const users = await this.getUsers(socket);
     socket.broadcast.emit('users', users);
     return { success: true };
@@ -169,7 +172,7 @@ export class EventsGateway
 
   async getUsers(socket) {
     const socketIds = await this.getSockets(socket);
-    return await this._redisManager.getAllUserNames(socketIds);
+    return await this._redisManager.getAllUsers(socketIds);
   }
 
   async getSockets(socket): Promise<string[]> {
@@ -188,7 +191,9 @@ export class EventsGateway
       // 참가실패(나중에 기획에 따른)
       return false;
     }
-    const user = await this._redisManager.getUser(socket.id);
+    const user = await this._redisManager.updateUser(socket.id, true);
+    const users = await this.getUsers(socket);
+    socket.broadcast.emit('users', users);
     const updatedRoom = {
       ...room,
       users: [...room.users, user],
@@ -215,13 +220,18 @@ export class EventsGateway
     @MessageBody() roomName: string,
   ) {
     socket.leave(roomName);
-    const user = await this._redisManager.getUser(socket.id);
-    const room = await this._redisManager.getRoom(roomName);
-    const updatedRoom = {
-      ...room,
-      users: room.users.filter((u) => u.socketId !== socket.id),
-    };
-    await this._redisManager.updateRoom(updatedRoom);
+
+    const user = await this._redisManager.updateUser(socket.id, false);
+    const users = await this.getUsers(socket);
+    socket.broadcast.emit('users', users);
+
+    const updatedRoom = await this._redisManager.removeUserFromRoom(
+      socket.id,
+      roomName,
+    );
+
+    const socketIds = await this.getSockets(socket);
+    const rooms = await this._redisManager.getAllRooms(socketIds);
     socket.broadcast.emit('rooms', rooms);
 
     socket.broadcast.to(roomName).emit('message', {

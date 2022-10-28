@@ -27,12 +27,12 @@ export class RedisManger {
         return false;
       }
     }
-    const user = new User(socketId, name);
+    const user = new User(socketId, name, false);
     await this._redisService.set(REDIS_USER_NAME(name), user);
     return true;
   }
 
-  async getAllUserNames(socketIds: string[]) {
+  async getAllUsers(socketIds: string[]) {
     let data = [];
     for (const socketId of socketIds) {
       const socketData = await this._redisService.hget(REDIS_SESSION, socketId);
@@ -50,9 +50,16 @@ export class RedisManger {
     return await this._redisService.hget(REDIS_SESSION, socketId);
   }
 
-  async addUser(socketId: string, name: string) {
-    const user = new User(socketId, name);
+  async addUser(socketId: string, name: string, isChatting: boolean) {
+    const user = new User(socketId, name, isChatting);
     await this._redisService.hset(REDIS_SESSION, socketId, user);
+  }
+
+  async updateUser(socketId: string, isChatting: boolean) {
+    const user = await this._redisService.hget(REDIS_SESSION, socketId);
+    user.isChatting = isChatting;
+    await this._redisService.hset(REDIS_SESSION, socketId, user);
+    return user;
   }
 
   async removeUser(socketId: string) {
@@ -80,6 +87,19 @@ export class RedisManger {
       REDIS_SOCKET_ROOM(room.creater.socketId),
       room,
     );
+  }
+
+  async removeUserFromRoom(
+    userSocketId: string,
+    roomName: string,
+  ): Promise<Room> {
+    const room = await this.getRoom(roomName);
+    const updatedRoom: Room = {
+      ...room,
+      users: room.users.filter((u) => u.socketId !== userSocketId),
+    };
+    await this.updateRoom(updatedRoom);
+    return updatedRoom;
   }
 
   async getRoomBySocketId(name: string, socketId: string): Promise<Room> {

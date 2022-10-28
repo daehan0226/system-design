@@ -40,8 +40,9 @@ const ChatRoom = () => {
     console.log(state);
     if (!state || !state.name) {
       navigate("/");
+    } else {
+      setName(state.name);
     }
-    setName(state.name);
   }, []);
 
   // 채팅이 길어지면(chats.length) 스크롤이 생성되므로, 스크롤의 위치를 최근 메시지에 위치시키기 위함
@@ -110,7 +111,7 @@ const ChatRoom = () => {
 
   const onLeaveRoom = useCallback(() => {
     socket.emit("leave-room", roomName, () => {
-      navigate("/");
+      navigate("/wait", { state: { name } });
     });
   }, [navigate, roomName]);
 
@@ -121,6 +122,7 @@ const ChatRoom = () => {
   return (
     <>
       <h1>Room creater: {roomInfo?.creater?.name}</h1>
+      <h1>My name: {name}</h1>
       <h1>Chat Room: {roomInfo?.name}</h1>
       <h3>Chat Member count: {roomInfo?.users?.length}</h3>
       <LeaveButton onClick={onLeaveRoom}>방 나가기</LeaveButton>
