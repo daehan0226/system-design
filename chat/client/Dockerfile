@@ -12,5 +12,11 @@ RUN npm install react-scripts@3.4.1 -g --silent
 # add app
 COPY . ./
 
+ARG REACT_APP_SERVER_PORT
+
+RUN sh create-env-file.sh REACT_APP_SERVER_PORT=$REACT_APP_SERVER_PORT
+RUN cat .env
+
+
 # start app
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]
