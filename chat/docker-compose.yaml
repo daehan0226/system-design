@@ -39,7 +39,7 @@ services:
       - "${API_PORT}"
     restart: "unless-stopped"
     volumes:
-      - ../api/logs:/usr/src/app/logs
+      - ./api/logs:/usr/src/app/logs
     env_file:
       - ./.env
     depends_on:
@@ -49,17 +49,17 @@ services:
     image: redis:alpine
     command: redis-server
     container_name: "${REDIS}"
-    ports:
-      - "${REDIS_PORT}:6379"
+    expose:
+      - "${REDIS_PORT}"
 
-  client:
-    build:
-      context: ./client
-    ports:
-      - "${FRONT_PORT}:3000"
-    container_name: "${FRONT}"
-    # volumes:
-    #   - ./client:/usr/src/app
-    #   - /usr/src/app/node_modules
-    depends_on:
-      - proxy
+  # client:
+  #   build:
+  #     context: ./client
+  #   ports:
+  #     - "${FRONT_PORT}:3000"
+  #   container_name: "${FRONT}"
+  #   # volumes:
+  #   #   - ./client:/usr/src/app
+  #   #   - /usr/src/app/node_modules
+  #   depends_on:
+  #     - proxy
