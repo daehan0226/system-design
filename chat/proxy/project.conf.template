@@ -1,5 +1,5 @@
 upstream api {
-    least_conn;
+    ip_hash;
     server ${API1}:${API_PORT};
     server ${API2}:${API_PORT};
 }
