@@ -52,14 +52,18 @@ services:
     expose:
       - "${REDIS_PORT}"
 
-  # client:
-  #   build:
-  #     context: ./client
-  #   ports:
-  #     - "${FRONT_PORT}:3000"
-  #   container_name: "${FRONT}"
-  #   # volumes:
-  #   #   - ./client:/usr/src/app
-  #   #   - /usr/src/app/node_modules
-  #   depends_on:
-  #     - proxy
+  client:
+    build:
+      context: ./client
+      args:
+        - "REACT_APP_SERVER_PORT=${PROXY_PORT}"
+    ports:
+      - "${FRONT_PORT}:3000"
+    container_name: "${FRONT}"
+    env_file:
+      - ./.env
+    # volumes:
+    #   - ./client:/usr/src/app
+    #   - /usr/src/app/node_modules
+    depends_on:
+      - proxy
